@@ -31,12 +31,38 @@ MainView {
 
 			ListView {
 				anchors.fill: parent
-				model: ["1", "2", "3", "4", "5"]
+				model: ListModel {
+					id: listViewModel
+					ListElement { num: 1 }
+					ListElement { num: 2 }
+					ListElement { num: 3 }
+					ListElement { num: 4 }
+					ListElement { num: 5 }
+					ListElement { num: 6 }
+					ListElement { num: 7 }
+					ListElement { num: 8 }
+					ListElement { num: 9 }
+					ListElement { num: 10 }
+					ListElement { num: 11 }
+					ListElement { num: 12 }
+					ListElement { num: 13 }
+					ListElement { num: 14 }
+					ListElement { num: 15 }
+					ListElement { num: 16 }
+					ListElement { num: 17 }
+					ListElement { num: 18 }
+					ListElement { num: 19 }
+					ListElement { num: 20 }
+				}
 				clip: true
 
-				delegate: Label {
-					fontSize: "medium"
-					text: i18n.tr('"Label" ' + modelData + ' inside the "ScrollView"')
+				delegate: ListItem {
+					height: itemLayout.height + (divider.visible ? divider.height : 0)
+
+					ListItemLayout {
+						id: itemLayout
+						title.text: i18n.tr('"Label" ' + model.num + ' inside the "ScrollView"')
+					}
 				}
 			}
 		}
