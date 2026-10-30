@@ -2,9 +2,18 @@ package main
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/nanu-c/qml-go"
+)
+
+var (
+	devices *Devices = NewDevices(
+		Device{Host: "192.168.178.50", Port: 3000, Name: "📺 Wohnzimmer"},
+		Device{Host: "192.168.178.68", Port: 3000, Name: "💻 Schreibtisch"},
+		Device{Host: "192.168.178.62", Port: 3000, Name: "🚽 Badezimmer"},
+		Device{Host: "192.168.178.67", Port: 3000, Name: "🛌 Schlafzimmer"},
+		Device{Host: "192.168.178.54", Port: 3000, Name: "✂️ Arbeitszimmer"},
+	)
 )
 
 func main() {
@@ -21,33 +30,33 @@ func run() error {
 		return err
 	}
 
-	testvar := TestStruct{Message: "Hello World", Number: 1}
-
 	context := engine.Context()
-	context.SetVar("testvar", &testvar)
-
-	testvar.GetMessage()
+	context.SetVar("goDevices", devices)
 
 	win := component.CreateWindow(context)
-	testvar.Root = win.Root()
-	
+
 	win.Show()
 	win.Wait()
 
 	return nil
 }
 
-type TestStruct struct {
-	Root    qml.Object
-	Message string
-	Output  string
-	Number  int
+type Device struct {
+	Host string
+	Port int
+	Name string
 }
 
-func (testvar *TestStruct) GetMessage() {
-	//go func() {
-		testvar.Number = testvar.Number + 1
-		testvar.Output = "Counter " + strconv.Itoa(testvar.Number)
-		qml.Changed(testvar, &testvar.Output)
-	//}()
+type Devices struct {
+	list []Device
+}
+
+func NewDevices(d ...Device) *Devices {
+	return &Devices{
+		list: d,
+	}
+}
+
+func (d *Devices) List() []Device {
+	return d.list
 }
