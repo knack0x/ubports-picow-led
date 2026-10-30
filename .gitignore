@@ -1,3 +1,4 @@
 /build/
 /.clickable/
+/local-qml-libs
 *.vim
