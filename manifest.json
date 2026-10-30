@@ -1,0 +1,15 @@
+{
+    "name": "picow-led.knack0x",
+    "description": "This is a simple lights control client for my home",
+    "architecture": "$ENV{ARCH}",
+    "title": "PicoW LED",
+    "hooks": {
+        "picow-led": {
+            "apparmor": "picow-led.apparmor",
+            "desktop":  "picow-led.desktop"
+        }
+    },
+    "version": "1.0.0",
+    "maintainer": "Udo Bauer <knack0x@gmail.com>",
+    "framework" : "$ENV{CLICK_FRAMEWORK}"
+}

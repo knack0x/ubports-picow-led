@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=PicoW LED
+Exec=picow-led %U
+Icon=assets/picow-led.png
+Terminal=false
+Type=Application
+X-Lomiri-Touch=true
