@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"runtime"
 
 	"github.com/nanu-c/qml-go"
 )
@@ -15,6 +16,10 @@ var (
 		Device{Host: "192.168.178.54", Port: 3000, Name: "✂️ Arbeitszimmer"},
 	)
 )
+
+func init() {
+	runtime.LockOSThread() // NOTE: Potential quick-fix for getting stuck during app startup 
+}
 
 func main() {
 	err := qml.Run(run)
