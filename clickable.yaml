@@ -1,0 +1,27 @@
+clickable_minimum_required: 8.8.0
+builder: custom
+kill: picow-led
+install_root_data:
+- manifest.json
+- picow-led.apparmor
+- picow-led.desktop
+- assets
+- qml
+build: |
+  export START_DIR=$(pwd)
+  export BUILD_DIR="$START_DIR/install"
+  echo [DEBUG] working directory: ${START_DIR}
+  cd ../../..
+  echo [DEBUG] source directory: $(pwd)
+  go build -o "$BUILD_DIR/picow-led" .
+  echo [DEBUG] executable: $BUILD_DIR/picow-led
+image_setup:
+  run:
+    # 1. Paketquellen updaten und curl + tar installieren
+    - apt-get update && apt-get install -y curl tar
+    # 2. Ordner für das neue Go erstellen
+    - mkdir -p /opt/go
+    # 3. Golang in der Aktuellen version herunterladen:
+    - curl -fsSL https://go.dev/dl/go1.27.1.linux-arm64.tar.gz | tar -xzf - --strip-components=1 -C /opt/go
+    # 4. Link executable to /usr/local/go/bin/go
+    - ln -sf /opt/go/bin/go /usr/local/go/bin/go
