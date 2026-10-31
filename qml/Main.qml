@@ -20,37 +20,32 @@ MainView {
 			title: i18n.tr('PicoW LED')
 		}
 
-		ScrollView {
+		ListView {
+			id: devicesListView
+
 			anchors {
 				margins: units.gu(2)
 				top: devicesPageHeader.bottom
 				right: parent.right
-				bottom: parent.bottom
 				left: parent.left
+				bottom: parent.bottom
 			}
 
-			ListView {
-				id: deviceListView
-				anchors.fill: parent
+			property var devices: []
 
-				clip: true
+			delegate: ListItem {
+				height: deviceListItemLayout.height + (divider.visible ? divider.height : 0)
 
-				model: 0
-				property var devices: []
-
-				delegate: ListItem {
-					height: deviceListItemLayout.height + (divider.visible ? divider.height : 0)
-
-					ListItemLayout {
-						id: deviceListItemLayout
-						title.text: i18n.tr(`${deviceListView.devices[index].Name} - ${deviceListView.devices[index].Host}:${deviceListView.devices[index].Port}`)
-					}
+				// TODO: Power toggle (button - right aligned), color change (right action), separate icon to the left (big and centered), name centered between the power toggle and the icon, below this a host:port line (small text, only if possible with this component, no magic)
+				ListItemLayout {
+					id: deviceListItemLayout
+					title.text: `${devicesListView.devices[index].Name} - ${devicesListView.devices[index].Host}:${devicesListView.devices[index].Port}`
 				}
+			}
 
-				Component.onCompleted: {
-					deviceListView.devices = JSON.parse(goDevices.list()) || []
-					deviceListView.model = deviceListView.devices.length
-				}
+			Component.onCompleted: {
+				devicesListView.devices = JSON.parse(goDevices.list()) || []
+				devicesListView.model = devicesListView.devices.length
 			}
 		}
 	}
