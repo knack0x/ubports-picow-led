@@ -16,62 +16,40 @@ MainView {
 		anchors.fill: parent
 
 		header: PageHeader {
-			id: header
+			id: devicesPageHeader
 			title: i18n.tr('PicoW LED')
 		}
 
 		ScrollView {
 			anchors {
 				margins: units.gu(2)
-				top: header.bottom
+				top: devicesPageHeader.bottom
 				right: parent.right
 				bottom: parent.bottom
 				left: parent.left
 			}
 
 			ListView {
-				id: listView
+				id: deviceListView
 				anchors.fill: parent
-				model: ListModel {
-					id: listViewModel
-					ListElement { num: 1 }
-					ListElement { num: 2 }
-					ListElement { num: 3 }
-					ListElement { num: 4 }
-					ListElement { num: 5 }
-					ListElement { num: 6 }
-					ListElement { num: 7 }
-					ListElement { num: 8 }
-					ListElement { num: 9 }
-					ListElement { num: 10 }
-					ListElement { num: 11 }
-					ListElement { num: 12 }
-					ListElement { num: 13 }
-					ListElement { num: 14 }
-					ListElement { num: 15 }
-					ListElement { num: 16 }
-					ListElement { num: 17 }
-					ListElement { num: 18 }
-					ListElement { num: 19 }
-					ListElement { num: 20 }
-				}
+
 				clip: true
 
+				model: 0
+				property var devices: []
+
 				delegate: ListItem {
-					height: itemLayout.height + (divider.visible ? divider.height : 0)
+					height: deviceListItemLayout.height + (divider.visible ? divider.height : 0)
 
 					ListItemLayout {
-						id: itemLayout
-						title.text: i18n.tr('"Label" ' + model.num + ' inside the "ScrollView"')
+						id: deviceListItemLayout
+						title.text: i18n.tr(`${deviceListView.devices[index].Name} - ${deviceListView.devices[index].Host}:${deviceListView.devices[index].Port}`)
 					}
 				}
 
 				Component.onCompleted: {
-					const devices = JSON.parse(goDevices.list())
-					for (let d of devices) {
-						console.log(`Device: Name=${d.Name}, Host="${d.Host}", Port=${d.Port}`)
-						// TODO: Set `listView.model` data
-					}
+					deviceListView.devices = JSON.parse(goDevices.list()) || []
+					deviceListView.model = deviceListView.devices.length
 				}
 			}
 		}
