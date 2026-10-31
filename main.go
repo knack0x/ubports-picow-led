@@ -1,11 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"runtime"
 
 	"github.com/nanu-c/qml-go"
 )
+
+func NewJSON(v any) string {
+	data, err := json.Marshal(v) // TODO: print error to stderr and return empty
+	if err != nil {
+		panic(err)
+	}
+	return string(data)
+}
 
 var (
 	devices *Devices = NewDevices(
@@ -53,15 +62,15 @@ type Device struct {
 }
 
 type Devices struct {
-	list []Device
+	data []Device
 }
 
 func NewDevices(d ...Device) *Devices {
 	return &Devices{
-		list: d,
+		data: d,
 	}
 }
 
-func (d *Devices) List() []Device {
-	return d.list
+func (d *Devices) List() string {
+	return NewJSON(d.data)
 }

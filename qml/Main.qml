@@ -30,6 +30,7 @@ MainView {
 			}
 
 			ListView {
+				id: listView
 				anchors.fill: parent
 				model: ListModel {
 					id: listViewModel
@@ -62,6 +63,14 @@ MainView {
 					ListItemLayout {
 						id: itemLayout
 						title.text: i18n.tr('"Label" ' + model.num + ' inside the "ScrollView"')
+					}
+				}
+
+				Component.onCompleted: {
+					const devices = JSON.parse(goDevices.list())
+					for (let d of devices) {
+						console.log(`Device: Name=${d.Name}, Host="${d.Host}", Port=${d.Port}`)
+						// TODO: Set `listView.model` data
 					}
 				}
 			}
