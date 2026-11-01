@@ -26,10 +26,6 @@ var (
 	)
 )
 
-func init() {
-	runtime.LockOSThread() // NOTE: Potential quick-fix for getting stuck during app startup 
-}
-
 func main() {
 	err := qml.Run(run)
 	if err != nil {
@@ -73,4 +69,9 @@ func NewDevices(d ...Device) *Devices {
 
 func (d *Devices) List() string {
 	return NewJSON(d.data)
+}
+
+func (d *Devices) PowerToggle(deviceHost string) (err string) {
+	// TODO: ...
+	return "work-in-progress"
 }
