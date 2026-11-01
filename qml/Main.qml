@@ -80,6 +80,8 @@ MainView {
 									disabled = false
 								}
 							}
+						}
+					}
 				}
 			}
 
