@@ -46,7 +46,7 @@ MainView {
 					Label {
 						SlotsLayout.position: SlotsLayout.Leading
 						text: `${devicesListView.devices[index].Name.split(" ")[0]}`
-						textSize: Label.Large
+						textSize: Label.XLarge
 					}
 
 					Icon {
