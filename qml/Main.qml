@@ -36,10 +36,33 @@ MainView {
 			delegate: ListItem {
 				height: deviceListItemLayout.height + (divider.visible ? divider.height : 0)
 
-				// TODO: Power toggle (button - right aligned), color change (right action), separate icon to the left (big and centered), name centered between the power toggle and the icon, below this a host:port line (small text, only if possible with this component, no magic)
 				ListItemLayout {
 					id: deviceListItemLayout
-					title.text: `${devicesListView.devices[index].Name} - ${devicesListView.devices[index].Host}:${devicesListView.devices[index].Port}`
+
+					title.text: `${devicesListView.devices[index].Name.split(" ").slice(1).join(" ")}`
+					title.textSize: Label.Medium
+					title.horizontalAlignment: Text.AlignHCenter
+
+					Label {
+						SlotsLayout.position: SlotsLayout.Leading
+						text: `${devicesListView.devices[index].Name.split(" ")[0]}`
+						textSize: Label.Large
+					}
+
+					Icon {
+						name: "system-shutdown"
+						SlotsLayout.position: SlotsLayout.Trailing
+						width: units.gu(4)
+						color: "#FF0000"
+
+						MouseArea {
+							anchors.fill: parent
+							// TODO: disable button while processing the power toggle, only enable after server responds. (error == orange, on == green, off == red)
+							onClicked: {
+								console.log("-> power toggle button clicked")
+							}
+						}
+					}
 				}
 			}
 
