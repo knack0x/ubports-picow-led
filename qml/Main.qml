@@ -21,7 +21,7 @@ MainView {
 		}
 
 		ListView {
-			id: devicesListView
+			id: devicesList 
 
 			anchors {
 				margins: units.gu(2)
@@ -31,24 +31,23 @@ MainView {
 				bottom: parent.bottom
 			}
 
-			property var devices: []
+			property var data: []
 
 			delegate: ListItem {
 				height: deviceListItemLayout.height + (divider.visible ? divider.height : 0)
 
 				ListItemLayout {
-					id: deviceListItemLayout
+					id: deviceListItemLayout 
 
-					property var deviceName: `${devicesListView.devices[index].Name.split(" ").slice(1).join(" ")}`
-					property var deviceIcon: `${devicesListView.devices[index].Name.split(" ")[0]}`
+					property var device: devicesList.data[index]
 
-					title.text: deviceName
+					title.text: `${device.Name.split(" ").slice(1).join(" ")}`
 					title.textSize: Label.Medium
 					title.horizontalAlignment: Text.AlignHCenter
 
 					Label {
 						SlotsLayout.position: SlotsLayout.Leading
-						text: deviceListItemLayout.deviceIcon
+						text: `${deviceListItemLayout.device.Name.split(" ")[0]}`
 						textSize: Label.XLarge
 					}
 
@@ -72,10 +71,16 @@ MainView {
 								disabled = true
 								// TODO: Change button color (disabled, gray, transparent?)
 
+								const device = deviceListItemLayout.device
+
 								try {
-									console.log("-> power toggle button clicked")
+									console.log(`--> Power Toggle: ${device.Name} ${device.Host}:${device.Port}`)
+									const err = goDevices.powerToggle(device.Host)
+									if (err) {
+										throw err
+									}
 								} catch (err) {
-									console.log(`[ERROR] Toggle power for "${deviceIcon} ${deviceName}" failed; ${err}`)
+									console.log(`[ERROR] Toggle power for "${device.Name}" failed; ${err}`)
 								} finally {
 									disabled = false
 								}
@@ -86,8 +91,8 @@ MainView {
 			}
 
 			Component.onCompleted: {
-				devicesListView.devices = JSON.parse(goDevices.list()) || []
-				devicesListView.model = devicesListView.devices.length
+				devicesList.data = JSON.parse(goDevices.list()) || []
+				devicesList.model = devicesList.data.length
 			}
 		}
 	}
