@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"runtime"
 
 	"github.com/nanu-c/qml-go"
 )
