@@ -39,13 +39,16 @@ MainView {
 				ListItemLayout {
 					id: deviceListItemLayout
 
-					title.text: `${devicesListView.devices[index].Name.split(" ").slice(1).join(" ")}`
+					property var deviceName: `${devicesListView.devices[index].Name.split(" ").slice(1).join(" ")}`
+					property var deviceIcon: `${devicesListView.devices[index].Name.split(" ")[0]}`
+
+					title.text: deviceName
 					title.textSize: Label.Medium
 					title.horizontalAlignment: Text.AlignHCenter
 
 					Label {
 						SlotsLayout.position: SlotsLayout.Leading
-						text: `${devicesListView.devices[index].Name.split(" ")[0]}`
+						text: deviceListItemLayout.deviceIcon
 						textSize: Label.XLarge
 					}
 
