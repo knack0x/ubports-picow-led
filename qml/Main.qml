@@ -60,12 +60,26 @@ MainView {
 
 						MouseArea {
 							anchors.fill: parent
+
+							property var disabled: false
+
 							// TODO: disable button while processing the power toggle, only enable after server responds. (error == orange, on == green, off == red)
 							onClicked: {
-								console.log("-> power toggle button clicked")
+								if (disabled) {
+									return
+								}
+
+								disabled = true
+								// TODO: Change button color (disabled, gray, transparent?)
+
+								try {
+									console.log("-> power toggle button clicked")
+								} catch (err) {
+									console.log(`[ERROR] Toggle power for "${deviceIcon} ${deviceName}" failed; ${err}`)
+								} finally {
+									disabled = false
+								}
 							}
-						}
-					}
 				}
 			}
 
