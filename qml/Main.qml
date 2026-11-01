@@ -21,7 +21,7 @@ MainView {
 		}
 
 		ListView {
-			id: devicesList 
+			id: devicesList
 
 			anchors {
 				margins: units.gu(2)
@@ -37,7 +37,7 @@ MainView {
 				height: deviceListItemLayout.height + (divider.visible ? divider.height : 0)
 
 				ListItemLayout {
-					id: deviceListItemLayout 
+					id: deviceListItemLayout
 
 					property var device: devicesList.data[index]
 
@@ -52,6 +52,8 @@ MainView {
 					}
 
 					Icon {
+						id: powerToggle
+
 						name: "system-shutdown"
 						SlotsLayout.position: SlotsLayout.Trailing
 						width: units.gu(4)
@@ -62,14 +64,13 @@ MainView {
 
 							property var disabled: false
 
-							// TODO: disable button while processing the power toggle, only enable after server responds. (error == orange, on == green, off == red)
 							onClicked: {
 								if (disabled) {
 									return
 								}
 
 								disabled = true
-								// TODO: Change button color (disabled, gray, transparent?)
+								powerToggle.color = "#00000099" // Disable Color
 
 								const device = deviceListItemLayout.device
 
@@ -79,8 +80,11 @@ MainView {
 									if (err) {
 										throw err
 									}
+									powerToggle.color = "#00FF00" // Power ON Color (testing)
 								} catch (err) {
 									console.log(`[ERROR] Toggle power for "${device.Name}" failed; ${err}`)
+									powerToggle.color = "#FFA500" // Error Color
+									// TODO: Render error message
 								} finally {
 									disabled = false
 								}
