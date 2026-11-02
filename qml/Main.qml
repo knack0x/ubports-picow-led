@@ -34,10 +34,12 @@ MainView {
 			property var data: []
 
 			delegate: ListItem {
-				height: deviceListItem.height + (divider.visible ? divider.height : 0)
+				height: deviceListItem.height + units.gu(4) + (divider.visible ? divider.height : 0)
 
 				ListItemLayout {
 					id: deviceListItem
+
+					anchors.centerIn: parent
 
 					property var device: devicesList.data[index]
 
@@ -56,8 +58,18 @@ MainView {
 
 						name: "system-shutdown"
 						SlotsLayout.position: SlotsLayout.Trailing
-						width: units.gu(4)
+						width: units.gu(6)
 						color: "#FF0000"
+
+						Timer {
+							id: resetPowerToggleColor
+							interval: 1000 
+							repeat: false
+							onTriggered: {
+								// TODO: Get the device power state and set color accordingly (ON = green, OFF = red)
+								powerToggle.color = "#FF0000"
+							}
+						}
 
 						MouseArea {
 							anchors.fill: parent
@@ -70,7 +82,9 @@ MainView {
 								}
 
 								disabled = true
-								powerToggle.color = "#00000099" // Disable Color
+
+								// TODO: Need a better color for this (alpha 80 is OK)
+								powerToggle.color = "#80FF0000" // Disable Color
 
 								const device = deviceListItem.device
 
@@ -80,13 +94,14 @@ MainView {
 									if (err) {
 										throw err
 									}
-									powerToggle.color = "#00FF00" // Power ON Color (testing)
 								} catch (err) {
 									console.log(`[ERROR] Toggle power for "${device.Name}" failed; ${err}`)
 									powerToggle.color = "#FFA500" // Error Color
 									// TODO: Render error message
 								} finally {
 									disabled = false
+									resetPowerToggleColor.stop() // Cancel a running timer (if running)
+									resetPowerToggleColor.start()
 								}
 							}
 						}

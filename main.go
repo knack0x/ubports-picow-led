@@ -85,19 +85,23 @@ func (d *Devices) List() string {
 // NOTE: The error return is string typed because this struct is set to QML
 func (d *Devices) PowerToggle(deviceHost string) (err string) {
 	device := d.get(deviceHost)
+	if device == nil {
+		return fmt.Sprintf("Failed to retrieve device \"%s\"", deviceHost)
+	}
 
-	if duty, err := picow.GetDuty(device); err != nil {
+	if duty, err := picow.GetDuty(device); err == nil {
 		for _, n := range duty {
-			if n > 0 { // Yes.. The light is on fire :)
-				err = picow.SetDuty(device, ColorWhite.GetDuty(device.Type)...) // NOTE: For now, just set white
-				if err != nil {
+			if n > 0 {
+				// Yes.. The light is on fire :) -> Turn it OFF
+				if err = picow.SetDuty(device, ColorOFF.GetDuty(device.Type)...); err != nil {
 					return err.Error()
 				}
+				return ""
 			}
 		}
 
-		err = picow.SetDuty(device, ColorOFF.GetDuty(device.Type)...)
-		if err != nil {
+		// Light is sleeping -> Wake it up (For now, just set it to white color)
+		if err = picow.SetDuty(device, ColorWhite.GetDuty(device.Type)...); err != nil {
 			return err.Error()
 		}
 	} else {
