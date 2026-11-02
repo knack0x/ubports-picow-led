@@ -34,10 +34,10 @@ MainView {
 			property var data: []
 
 			delegate: ListItem {
-				height: deviceListItemLayout.height + (divider.visible ? divider.height : 0)
+				height: deviceListItem.height + (divider.visible ? divider.height : 0)
 
 				ListItemLayout {
-					id: deviceListItemLayout
+					id: deviceListItem
 
 					property var device: devicesList.data[index]
 
@@ -47,7 +47,7 @@ MainView {
 
 					Label {
 						SlotsLayout.position: SlotsLayout.Leading
-						text: `${deviceListItemLayout.device.Name.split(" ")[0]}`
+						text: `${deviceListItem.device.Name.split(" ")[0]}`
 						textSize: Label.XLarge
 					}
 
@@ -72,7 +72,7 @@ MainView {
 								disabled = true
 								powerToggle.color = "#00000099" // Disable Color
 
-								const device = deviceListItemLayout.device
+								const device = deviceListItem.device
 
 								try {
 									console.log(`--> Power Toggle: ${device.Name} ${device.Host}:${device.Port}`)
