@@ -63,7 +63,7 @@ MainView {
 
 						Timer {
 							id: resetPowerToggleColor
-							interval: 1000 
+							interval: 500
 							repeat: false
 							onTriggered: {
 								// TODO: Get the device power state and set color accordingly (ON = green, OFF = red)
@@ -90,10 +90,7 @@ MainView {
 
 								try {
 									console.log(`--> Power Toggle: ${device.Name} ${device.Host}:${device.Port}`)
-									const err = goDevices.powerToggle(device.Host)
-									if (err) {
-										throw err
-									}
+									goDevices.powerToggle(device.Host)
 								} catch (err) {
 									console.log(`[ERROR] Toggle power for "${device.Name}" failed; ${err}`)
 									powerToggle.color = "#FFA500" // Error Color
