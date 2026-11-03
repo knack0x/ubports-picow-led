@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	picow_models "github.com/knackwurstking/picow-led/pkg/models"
 	"github.com/knackwurstking/picow-led/pkg/picow"
@@ -53,7 +54,7 @@ func run() error {
 }
 
 func NewJSON(v any) string {
-	data, err := json.Marshal(v) // TODO: print error to stderr and return empty
+	data, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
@@ -66,13 +67,20 @@ type Device struct {
 	Name string
 }
 
+// Devices QML handler for devices
+//
+// NOTE: Always use the `NewDevices` function for initializing this. It will make the error channel which is a private field.
 type Devices struct {
 	data []Device
+
+	errChannel chan error
+	_errChannelStop chan error
+	_errChannelRunning bool
 }
 
 func NewDevices(d ...Device) *Devices {
 	return &Devices{
-		data: d,
+		data:       d,
 	}
 }
 
@@ -80,35 +88,72 @@ func (d *Devices) List() string {
 	return NewJSON(d.data)
 }
 
-// PowerToggle does switch lights per device on an off
-//
-// NOTE: The error return is string typed because this struct is set to QML
-func (d *Devices) PowerToggle(deviceHost string) (err string) {
-	device := d.get(deviceHost)
-	if device == nil {
-		return fmt.Sprintf("Failed to retrieve device \"%s\"", deviceHost)
+func (d *Devices) StartErrorChannel(obj qml.Object) {
+	if d._errChannelRunning {
+		return // Already running
 	}
+	d._errChannelRunning = true
 
-	if duty, err := picow.GetDuty(device); err == nil {
-		for _, n := range duty {
-			if n > 0 {
-				// Yes.. The light is on fire :) -> Turn it OFF
-				if err = picow.SetDuty(device, ColorOFF.GetDuty(device.Type)...); err != nil {
-					return err.Error()
+	d.errChannel = make(chan error, 1)
+	d._errChannelStop = make(chan error, 1)
+
+	go func() {
+		defer func() {
+			d._errChannelRunning = false
+			close(d.errChannel)
+			close(d._errChannelStop)
+		}()
+
+		for true {
+			select {
+			case err := <- d.errChannel:
+				if obj == nil {
+					fmt.Fprintf(os.Stderr, "[ERROR] %v\n", err)
+				} else {
+					// TODO: Error notify (or something else) for the UI.
 				}
-				return ""
+			case <- d._errChannelStop:
+				return
 			}
 		}
+	}()
+}
 
-		// Light is sleeping -> Wake it up (For now, just set it to white color)
-		if err = picow.SetDuty(device, ColorWhite.GetDuty(device.Type)...); err != nil {
-			return err.Error()
+// PowerToggle does switch lights per device on an off
+func (d *Devices) PowerToggle(deviceHost string) {
+	d.StartErrorChannel(nil)
+
+	go func() {
+		device := d.get(deviceHost)
+		if device == nil {
+			d.errChannel <- fmt.Errorf("Failed to retrieve device \"%s\"", deviceHost)
+			return
 		}
-	} else {
-		return fmt.Sprintf("Failed to retrieve duty for \"%s\" (%s): %s", deviceHost, device.Addr, err.Error())
-	}
 
-	return ""
+		if duty, err := picow.GetDuty(device); err == nil {
+			for _, n := range duty {
+				if n > 0 {
+					// Yes.. The light is on fire :) -> Turn it OFF
+					if err = picow.SetDuty(device, ColorOFF.GetDuty(device.Type)...); err != nil {
+						d.errChannel <- fmt.Errorf("Failed to turn OFF \"%s\": %v", deviceHost, err)
+						return
+					}
+					return
+				}
+			}
+
+			// Light is sleeping -> Wake it up (For now, just set it to white color)
+			if err = picow.SetDuty(device, ColorWhite.GetDuty(device.Type)...); err != nil {
+				d.errChannel <- fmt.Errorf("Failed to set duty (%v) for \"%s\": %v", ColorWhite.GetDuty(device.Type), deviceHost, err)
+				return
+			}
+		} else {
+			d.errChannel <- fmt.Errorf("Failed to retrieve duty from \"%s\" (%s): %s", deviceHost, device.Addr, err)
+			return
+		}
+
+		return
+	}()
 }
 
 // get ist private because i am not sure if `*picow_models.Device` return does work with QML (this `struct` ist set for QML)
