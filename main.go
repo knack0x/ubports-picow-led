@@ -183,7 +183,6 @@ func (d *Devices) PowerToggle(addr string, powerToggleButton qml.Object) {
 			return
 		}
 
-		// TODO: We can remove this `GetDuty` call at some point, provided that we automatically trigger a refresh of everything whenever the app comes into focus.
 		if duty, err := picow.GetDuty(device.Device); err == nil {
 			for _, n := range duty {
 				if n > 0 {
