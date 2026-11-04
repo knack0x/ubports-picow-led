@@ -42,6 +42,7 @@ MainView {
 				}
 
 				property var data: []
+				model: data.length
 
 				delegate: ListItem {
 					height: deviceListItem.height + units.gu(4) + (divider.visible ? divider.height : 0)
@@ -116,9 +117,18 @@ MainView {
 					}
 				}
 
+				footer: Item {
+					width: devicesList.widht
+					height: contentHeight
+
+					Label {
+						anchors.margins: units.gu(2)
+						text: "Log Stream:\nLine 1...\nLine 2...\n"
+					}
+				}
+
 				Component.onCompleted: {
 					devicesList.data = JSON.parse(goDevices.list()) || []
-					devicesList.model = devicesList.data.length
 				}
 			}
 		}
