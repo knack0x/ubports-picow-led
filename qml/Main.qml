@@ -12,6 +12,22 @@ MainView {
 	width: units.gu(45)
 	height: units.gu(75)
 
+	property var logLines: ""
+
+	function log(message) {
+		const newLine = "[" + new Date().toLocaleTimeString() + "] " + message;
+
+		let lines = logLines ? logLines.split("\n\n") : [];
+
+		lines.unshift(newLine);
+
+		if (lines.length > 20) {
+			lines.pop();
+		}
+
+		logLines = lines.join("\n\n");
+	}
+
 	Page {
 		anchors.fill: parent
 
@@ -53,13 +69,15 @@ MainView {
 
 						property var device: devicesList.data[index]
 
-						title.text: `${device.Name.split(" ").slice(1).join(" ")}`
+						title.text: `${device.name}`
 						title.textSize: Label.Medium
 						title.horizontalAlignment: Text.AlignHCenter
 
 						Label {
+							id: icon
+
 							SlotsLayout.position: SlotsLayout.Leading
-							text: `${deviceListItem.device.Name.split(" ")[0]}`
+							text: `${deviceListItem.device.icon}`
 							textSize: Label.XLarge
 						}
 
@@ -70,19 +88,26 @@ MainView {
 							SlotsLayout.position: SlotsLayout.Trailing
 							width: units.gu(6)
 
+							color: "#8036454F" // NOTE: Just the initial color
+
 							function setState(v) {
 								switch (v) {
 									case "ON":
 									powerToggle.color = "#00FF00"
+									root.log(`Device Color ${deviceListItem.device.name}: #00FF00 (green, state: "ON")`)
 									break
 									case "OFF":
 									powerToggle.color = "#FF0000"
+									root.log(`Device Color ${deviceListItem.device.name}: #FF0000 (red, state: "OFF")`)
 									break
 									case "DISABLED":
 									powerToggle.color = "#8036454F"
+									// Disabled, this is noise
+									//root.log(`Device Color ${deviceListItem.device.name}: #8036454F (charcoal, state: "DISABLED")`)
 									break
 									case "ERROR":
 									powerToggle.color = "#FFA500"
+									root.log(`Device Color ${deviceListItem.device.name}: #FFA500 (orange, state: "ERROR")`)
 									break
 								}
 							}
@@ -103,21 +128,16 @@ MainView {
 									const device = deviceListItem.device
 
 									try {
-										console.log(`--> Power Toggle: ${device.Name} ${device.Host}:${device.Port}`)
-										goDevices.powerToggle(device.Host, powerToggle)
+										root.log(`Run Power Toggle: ${device.name}`)
+										goDevices.powerToggle(device.addr, powerToggle)
 									} catch (err) {
 										powerToggle.setState("ERROR")
-										console.log(`[ERROR] ${message}`)
-										logStream.append(message)
+										root.log(`Power Toggle failed: ${device.name}: ${err}`)
 
 									} finally {
 										disabled = false
 									}
 								}
-							}
-
-							Component.onCompleted: {
-								powerToggle.setState("DISABLED") // NOTE: Yes, this initial "DISABLED" color is on purpose.. Currently there is no initial color check, so i do not know if the lights is ON/OFF
 							}
 						}
 					}
@@ -143,21 +163,10 @@ MainView {
 						autoSize: true
 						maximumLineCount: 0
 
-						property var logLines: []
-
-						function append(message) {
-							logLines.unshift("[" + new Date().toLocaleTimeString() + "] " + message)
-
-							if (logLines.length > 20) {
-								logLines.pop()
-							}
-
-							text = logLines.join("\n")
-						}
+						text: root.logLines
 
 						Component.onCompleted: {
-							append("Log Stream is initialized and ready to go 😏")
-							goDevices.startErrorChannel(logStream)
+							goDevices.startErrorChannel(root)
 						}
 					}
 				}
