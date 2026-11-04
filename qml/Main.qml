@@ -12,7 +12,6 @@ MainView {
 	width: units.gu(45)
 	height: units.gu(75)
 
-	// TODO: Add a Log stream component somehow (dead simple at first)
 	Page {
 		anchors.fill: parent
 
@@ -117,13 +116,31 @@ MainView {
 					}
 				}
 
-				footer: Item {
-					width: devicesList.widht
+				footer: Column {
+					width: devicesList.width
 					height: contentHeight
 
+					spacing: units.gu(2)
+
 					Label {
+						text: "Log Stream"
+						textSize: Label.XLarge
+						color: LomiriColors.ash
+					}
+
+					TextArea {
+						width: parent.width
 						anchors.margins: units.gu(2)
-						text: "Log Stream:\nLine 1...\nLine 2...\n"
+
+						autoSize: true
+						maximumLineCount: 0
+
+						wrapMode: Text.WordWrap
+
+						readOnly: true
+
+						// TODO: Reverse the text output (newest first)
+						text: "Line 1...\nLine 2...\nNow a really long line for testing the wrapping `wrapMode: ...`, so fsklfdjfkldsjfklsa;jf jkdsfjklflkj sakljfkdslf fk slf fklkjflksj ksfjsklfjsdklfj skfjfskljffkl jfklsj fskfl js skjf kf jsf kldsjf dsklf jfkldsf jsdlkfj skfjsdklfj slkfj sdk fjkslfj sdklf j s fkljsf klsjf klsjf skf jsklf jsdklf jsklfjsdlf jf\n" // NOTE: Dummy test for testing
 					}
 				}
 
