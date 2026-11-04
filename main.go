@@ -13,6 +13,10 @@ import (
 
 const (
 	PicowServer = "192.168.178.52:50835" // Format <host:port>
+
+	DeviceStateError = "ERROR"
+	DeviceStateON    = "ON"
+	DeviceStateOFF   = "OFF"
 )
 
 var (
@@ -62,7 +66,7 @@ func NewJSON(v any) string {
 }
 
 type Device struct {
-	Host string
+	Host string // Host have to be unique
 	Port int
 	Name string
 }
@@ -73,14 +77,16 @@ type Device struct {
 type Devices struct {
 	data []Device
 
-	errChannel chan error
-	_errChannelStop chan error
+	errChannel         chan error
+	_errChannelStop    chan error
 	_errChannelRunning bool
+
+	_logStream qml.Object
 }
 
 func NewDevices(d ...Device) *Devices {
 	return &Devices{
-		data:       d,
+		data: d,
 	}
 }
 
@@ -88,7 +94,11 @@ func (d *Devices) List() string {
 	return NewJSON(d.data)
 }
 
-func (d *Devices) StartErrorChannel(obj qml.Object) {
+func (d *Devices) StartErrorChannel(logStream qml.Object) {
+	if logStream != nil {
+		d._logStream = logStream
+	}
+
 	if d._errChannelRunning {
 		return // Already running
 	}
@@ -106,13 +116,13 @@ func (d *Devices) StartErrorChannel(obj qml.Object) {
 
 		for true {
 			select {
-			case err := <- d.errChannel:
-				if obj == nil {
-					fmt.Fprintf(os.Stderr, "[ERROR] %v\n", err)
-				} else {
-					// TODO: Error notify (or something else) for the UI.
+			case err := <-d.errChannel:
+				message := fmt.Sprintf("[ERROR] %v", err)
+				fmt.Fprintln(os.Stderr, message)
+				if d._logStream != nil {
+					d._logStream.Call("append", message)
 				}
-			case <- d._errChannelStop:
+			case <-d._errChannelStop:
 				return
 			}
 		}
@@ -120,7 +130,7 @@ func (d *Devices) StartErrorChannel(obj qml.Object) {
 }
 
 // PowerToggle does switch lights per device on an off
-func (d *Devices) PowerToggle(deviceHost string) {
+func (d *Devices) PowerToggle(deviceHost string, powerToggleButton qml.Object) {
 	d.StartErrorChannel(nil)
 
 	go func() {
@@ -136,16 +146,22 @@ func (d *Devices) PowerToggle(deviceHost string) {
 					// Yes.. The light is on fire :) -> Turn it OFF
 					if err = picow.SetDuty(device, ColorOFF.GetDuty(device.Type)...); err != nil {
 						d.errChannel <- fmt.Errorf("Failed to turn OFF \"%s\": %v", deviceHost, err)
+						powerToggleButton.Call("setState", DeviceStateError)
 						return
+					} else {
+						powerToggleButton.Call("setState", DeviceStateOFF)
 					}
 					return
 				}
 			}
 
-			// Light is sleeping -> Wake it up (For now, just set it to white color)
+			// Light is sleeping -> Wake it up (For now, just set it to white color) -> Turn it ON
 			if err = picow.SetDuty(device, ColorWhite.GetDuty(device.Type)...); err != nil {
 				d.errChannel <- fmt.Errorf("Failed to set duty (%v) for \"%s\": %v", ColorWhite.GetDuty(device.Type), deviceHost, err)
+				powerToggleButton.Call("setState", DeviceStateError)
 				return
+			} else {
+				powerToggleButton.Call("setState", DeviceStateON)
 			}
 		} else {
 			d.errChannel <- fmt.Errorf("Failed to retrieve duty from \"%s\" (%s): %s", deviceHost, device.Addr, err)

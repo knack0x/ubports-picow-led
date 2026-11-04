@@ -69,15 +69,21 @@ MainView {
 							name: "system-shutdown"
 							SlotsLayout.position: SlotsLayout.Trailing
 							width: units.gu(6)
-							color: "#FF0000"
 
-							Timer {
-								id: resetPowerToggleColor
-								interval: 500
-								repeat: false
-								onTriggered: {
-									// TODO: Get the device power state and set color accordingly (ON = green, OFF = red)
+							function setState(v) {
+								switch (v) {
+									case "ON":
+									powerToggle.color = "#00FF00"
+									break
+									case "OFF":
 									powerToggle.color = "#FF0000"
+									break
+									case "DISABLED":
+									powerToggle.color = "#8036454F"
+									break
+									case "ERROR":
+									powerToggle.color = "#FFA500"
+									break
 								}
 							}
 
@@ -92,25 +98,26 @@ MainView {
 									}
 
 									disabled = true
-
-									// TODO: Need a better color for this (alpha 80 is OK)
-									powerToggle.color = "#80FF0000" // Disable Color
+									powerToggle.setState("DISABLED")
 
 									const device = deviceListItem.device
 
 									try {
 										console.log(`--> Power Toggle: ${device.Name} ${device.Host}:${device.Port}`)
-										goDevices.powerToggle(device.Host)
+										goDevices.powerToggle(device.Host, powerToggle)
 									} catch (err) {
-										console.log(`[ERROR] Toggle power for "${device.Name}" failed; ${err}`)
-										powerToggle.color = "#FFA500" // Error Color
-										// TODO: Render error message to the log component
+										powerToggle.setState("ERROR")
+										console.log(`[ERROR] ${message}`)
+										logStream.append(message)
+
 									} finally {
 										disabled = false
-										resetPowerToggleColor.stop() // Cancel a running timer (if running)
-										resetPowerToggleColor.start()
 									}
 								}
+							}
+
+							Component.onCompleted: {
+								powerToggle.setState("DISABLED") // NOTE: Yes, this initial "DISABLED" color is on purpose.. Currently there is no initial color check, so i do not know if the lights is ON/OFF
 							}
 						}
 					}
@@ -118,29 +125,40 @@ MainView {
 
 				footer: Column {
 					width: devicesList.width
-					height: contentHeight
 
 					spacing: units.gu(2)
 
 					Label {
-						text: "Log Stream"
+						text: "Log Stream:"
 						textSize: Label.XLarge
 						color: LomiriColors.ash
 					}
 
 					TextArea {
-						width: parent.width
+						id: logStream
 						anchors.margins: units.gu(2)
-
+						width: parent.width
+						wrapMode: Text.WordWrap
+						readOnly: true
 						autoSize: true
 						maximumLineCount: 0
 
-						wrapMode: Text.WordWrap
+						property var logLines: []
 
-						readOnly: true
+						function append(message) {
+							logLines.unshift("[" + new Date().toLocaleTimeString() + "] " + message)
 
-						// TODO: Reverse the text output (newest first)
-						text: "Line 1...\nLine 2...\nNow a really long line for testing the wrapping `wrapMode: ...`, so fsklfdjfkldsjfklsa;jf jkdsfjklflkj sakljfkdslf fk slf fklkjflksj ksfjsklfjsdklfj skfjfskljffkl jfklsj fskfl js skjf kf jsf kldsjf dsklf jfkldsf jsdlkfj skfjsdklfj slkfj sdk fjkslfj sdklf j s fkljsf klsjf klsjf skf jsklf jsdklf jsklfjsdlf jf\n" // NOTE: Dummy test for testing
+							if (logLines.length > 20) {
+								logLines.pop()
+							}
+
+							text = logLines.join("\n")
+						}
+
+						Component.onCompleted: {
+							append("Log Stream is initialized and ready to go 😏")
+							goDevices.startErrorChannel(logStream)
+						}
 					}
 				}
 
