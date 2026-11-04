@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	PicowServer = "192.168.178.52:50835" // Format <host:port>
+	PicowServer string = "192.168.178.52:50835" // Format <host:port>
 
-	DeviceStateError = "ERROR"
-	DeviceStateON    = "ON"
-	DeviceStateOFF   = "OFF"
+	DeviceStateError string = "ERROR"
+	DeviceStateON    string = "ON"
+	DeviceStateOFF   string = "OFF"
 )
 
 var (
@@ -143,6 +143,35 @@ func (d *Devices) StartErrorChannel(root qml.Object) {
 	}()
 }
 
+func (d *Devices) GetDuty(addr string, powerToggleButton qml.Object) {
+	go func() {
+		device := d.get(addr)
+		if device == nil {
+			d.errChannel <- fmt.Errorf("Failed to retrieve device %s", addr)
+			d.setState(powerToggleButton, DeviceStateError)
+			return
+		}
+
+		duty, err := picow.GetDuty(device.Device)
+		if err != nil {
+			d.errChannel <- fmt.Errorf("Failed to fetch duty from device %s", d.deviceString(device))
+			d.setState(powerToggleButton, DeviceStateError)
+			return
+		}
+		device.Duty = duty
+
+		if powerToggleButton != nil {
+			for _, n := range duty {
+				if n > 0 {
+					d.setState(powerToggleButton, DeviceStateON)
+					return
+				}
+			}
+			d.setState(powerToggleButton, DeviceStateOFF)
+		}
+	}()
+}
+
 // PowerToggle does switch lights per device on an off
 func (d *Devices) PowerToggle(addr string, powerToggleButton qml.Object) {
 	d.StartErrorChannel(nil)
@@ -154,16 +183,16 @@ func (d *Devices) PowerToggle(addr string, powerToggleButton qml.Object) {
 			return
 		}
 
+		// TODO: We can remove this `GetDuty` call at some point, provided that we automatically trigger a refresh of everything whenever the app comes into focus.
 		if duty, err := picow.GetDuty(device.Device); err == nil {
 			for _, n := range duty {
 				if n > 0 {
 					// Yes.. The light is on fire :) -> Turn it OFF
 					if err = picow.SetDuty(device.Device, ColorOFF.GetDuty(device.Type)...); err != nil {
 						d.errChannel <- fmt.Errorf("Failed to turn OFF %s: %v", d.deviceString(device), err)
-						powerToggleButton.Call("setState", DeviceStateError)
-						return
+						d.setState(powerToggleButton, DeviceStateError)
 					} else {
-						powerToggleButton.Call("setState", DeviceStateOFF)
+						d.setState(powerToggleButton, DeviceStateOFF)
 					}
 					return
 				}
@@ -172,17 +201,15 @@ func (d *Devices) PowerToggle(addr string, powerToggleButton qml.Object) {
 			// Light is sleeping -> Wake it up (For now, just set it to white color) -> Turn it ON
 			if err = picow.SetDuty(device.Device, ColorWhite.GetDuty(device.Type)...); err != nil {
 				d.errChannel <- fmt.Errorf("Failed to set duty (%v) %s: %v", ColorWhite.GetDuty(device.Type), d.deviceString(device), err)
-				powerToggleButton.Call("setState", DeviceStateError)
-				return
+				d.setState(powerToggleButton, DeviceStateError)
 			} else {
-				powerToggleButton.Call("setState", DeviceStateON)
+				d.setState(powerToggleButton, DeviceStateON)
 			}
+			return
 		} else {
 			d.errChannel <- fmt.Errorf("Failed to retrieve duty from %s: %s", d.deviceString(device), device.Addr, err)
 			return
 		}
-
-		return
 	}()
 }
 
@@ -201,4 +228,11 @@ func (d *Devices) deviceString(device *Device) string {
 		return fmt.Sprintf("%s", device.Name)
 	}
 	return fmt.Sprintf("%s", device.Addr)
+}
+
+func (d *Devices) setState(powerToggleButton qml.Object, state string) {
+	if powerToggleButton == nil {
+		return
+	}
+	powerToggleButton.Call("setState", state)
 }

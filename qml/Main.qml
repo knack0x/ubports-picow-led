@@ -88,25 +88,26 @@ MainView {
 							SlotsLayout.position: SlotsLayout.Trailing
 							width: units.gu(6)
 
-							color: "#8036454F" // NOTE: Just the initial color
+							property var currentColor: "#8036454F"
+							color: currentColor
 
 							function setState(v) {
 								switch (v) {
 									case "ON":
-									powerToggle.color = "#00FF00"
+									powerToggle.currentColor = "#00FF00"
 									root.log(`Device Color ${deviceListItem.device.name}: #00FF00 (green, state: "ON")`)
 									break
 									case "OFF":
-									powerToggle.color = "#FF0000"
+									powerToggle.currentColor = "#FF0000"
 									root.log(`Device Color ${deviceListItem.device.name}: #FF0000 (red, state: "OFF")`)
 									break
 									case "DISABLED":
-									powerToggle.color = "#8036454F"
+									powerToggle.currentColor = "#8036454F"
 									// Disabled, this is noise
 									//root.log(`Device Color ${deviceListItem.device.name}: #8036454F (charcoal, state: "DISABLED")`)
 									break
 									case "ERROR":
-									powerToggle.color = "#FFA500"
+									powerToggle.currentColor = "#FFA500"
 									root.log(`Device Color ${deviceListItem.device.name}: #FFA500 (orange, state: "ERROR")`)
 									break
 								}
@@ -138,6 +139,15 @@ MainView {
 										disabled = false
 									}
 								}
+							}
+						}
+
+						Connections {
+							target: Qt.application
+
+							function onActiveChanged() {
+								root.log(`[DEBUG] Connections.onActiveChanged -> Fetch color for device -> ${deviceListItem.device.name}`)
+								goDevices.getDuty(deviceListItem.device.addr, powerToggle)
 							}
 						}
 					}
