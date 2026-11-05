@@ -1,6 +1,6 @@
 {
     "name": "picow-led.knack0x",
-    "description": "This is a simple lights control client for my home",
+    "description": "A lightweight graphical control client for Ubports that manages PicoW LED devices. Developed as an application of the project: https://github.com/knack0x/picow-led-microcontroller.",
     "architecture": "$ENV{ARCH}",
     "title": "PicoW LED",
     "hooks": {
