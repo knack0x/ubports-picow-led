@@ -9,7 +9,7 @@
             "desktop":  "picow-led.desktop"
         }
     },
-    "version": "1.0.0",
+    "version": "0.1.0",
     "maintainer": "Udo Bauer <knack0x@gmail.com>",
     "framework" : "$ENV{CLICK_FRAMEWORK}"
 }
